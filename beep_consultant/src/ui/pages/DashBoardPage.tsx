@@ -1,5 +1,6 @@
 import { Plus } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const Card = ({
   title,
@@ -23,7 +24,9 @@ const Card = ({
     </div>
   </div>
 );
+
 const Dashboard = () => {
+  const navigate = useNavigate();
   const Cards = [
     {
       title: "오늘 저녁밥 메뉴에 대한 고민상담",
@@ -61,6 +64,10 @@ const Dashboard = () => {
       duration: "30분 전",
     },
   ];
+
+  const handleCreateChat = () => {
+    navigate('/chat');
+  };
 
   return (
     <>
@@ -111,7 +118,7 @@ const Dashboard = () => {
             ))}
           </div>
 
-          <button className="fixed bottom-8 right-8 bg-green-700 text-white rounded-full p-4 shadow-lg hover:bg-green-800 transition-colors">
+          <button className="fixed bottom-8 right-8 bg-green-700 text-white rounded-full p-4 shadow-lg hover:bg-green-800 transition-colors" onClick={handleCreateChat}>
             <div className="flex items-center justify-center">
               <Plus className="w-6 h-6" />
               <span className="ml-2">새 채팅 시작하기</span>
