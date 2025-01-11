@@ -23,7 +23,6 @@ export const signup = async (signupData: SignupData): Promise<void> => {
 export const login = async (email: string, password: string): Promise<any> => {
     try {
       const response = await axiosInstance.post<LoginResponse>('/api/sign-in', { email: email, password: password });
-      console.log(response);
       return response.data;
     } catch (error) {
       console.error('Login failed:', error);

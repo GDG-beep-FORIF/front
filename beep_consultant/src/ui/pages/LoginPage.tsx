@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { login } from "../../api/auth_api";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -41,11 +41,9 @@ const LoginForm: React.FC = () => {
 
         try {
             const response = await login(formData.email, formData.password);
-            console.log(response);
             authLogin({
                 user: response
             });
-            console.log("auth login success");
             navigate("/dashboard");
         } catch (error: any) {
             setError("이메일 또는 비밀번호가 올바르지 않습니다.");

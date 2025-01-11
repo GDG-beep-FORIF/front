@@ -57,7 +57,7 @@ const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   useEffect(() => {
     const fetchChatRooms = async () => {
@@ -96,6 +96,11 @@ const Dashboard = () => {
   const handleCreateChat = () => {
     navigate('/chat');
   };
+
+  const handleLogout = () => {
+    logout();
+    window.location.href = '/';
+  }
 
   return (
     <div className="min-h-screen bg-[#F7FAF8]">
@@ -175,7 +180,7 @@ const Dashboard = () => {
                 </button>
               </Link>
               <Link to="" className="w-full">
-                <button className="w-full py-2 px-4 rounded-lg text-gray-700 hover:bg-[#EBF2EE] hover:text-[#558F6B] transition-colors duration-200 flex items-center justify-center">
+                <button className="w-full py-2 px-4 rounded-lg text-gray-700 hover:bg-[#EBF2EE] hover:text-[#558F6B] transition-colors duration-200 flex items-center justify-center" onClick={handleLogout}>
                   로그아웃
                 </button>
               </Link>

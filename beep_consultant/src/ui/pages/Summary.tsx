@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 
 export interface DataFrom {
   room_id: string;
@@ -21,14 +22,13 @@ interface SummaryPageProps {
   markdown?: string;
 }
 
-const userId = "bc430308-def0-4203-9971-437fdba5283a";
-
 const SummaryPage: React.FC<SummaryPageProps> = ({ markdown = "" }) => {
   const { roomId } = useParams();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [detailData, setDetailData] = useState<DataFrom | null>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchChatRooms = async () => {
@@ -39,7 +39,7 @@ const SummaryPage: React.FC<SummaryPageProps> = ({ markdown = "" }) => {
 
       try {
         const response = await fetch(
-          `${process.env.REACT_APP_API_BASE_URL}/chat-rooms/${roomId}?user_id=${userId}`
+          `${process.env.REACT_APP_API_BASE_URL2}/chat-rooms/${roomId}?user_id=${user?.userId}`
         );
 
         if (!response.ok) {

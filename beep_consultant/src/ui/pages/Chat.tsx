@@ -44,30 +44,24 @@ const ChatPage = () => {
   const handleStartChat = async () => {
     try {
       const aiParticipants = participants.filter(p => !p.isUser);
-      console.log(aiParticipants);
       const aiIds = aiParticipants.map(p => p.id);
       
       let response;
       if (userId) {
         if (aiIds.length === 1) {
-          console.log(aiIds);
           response = await create_mentor_chat({
             title: `${aiParticipants[0].name}과의 상담`, 
             person_ids: aiIds,
             user_id: userId
           });
-          console.log(response.data.room_id);
           setChatRoomID(response.data.room_id);
-          console.log(chatRoomID);
         } else {
           response = await create_group_chat({
             title: `${aiParticipants[0].name}, ${aiParticipants[1].name}과의 상담`, 
             person_ids: aiIds,
             user_id: userId
           });
-          console.log(response.data.room_id);
           setChatRoomID(response.data.room_id);
-          console.log(chatRoomID);
         }
       }
 
@@ -153,7 +147,6 @@ const ChatPage = () => {
       const response = await start_chat({
         content: currentMessage
       }, chatRoomID, userId);
-      console.log(response);
       
       let senderName, senderID;
       if (participants.length == 2) {

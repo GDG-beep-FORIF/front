@@ -34,7 +34,6 @@ export const create_mentor_chat = async (createdata: CreateMentorChatRequest) =>
 
 export const create_group_chat = async (createdata: CreateMentorChatRequest) => {
   try {
-    console.log(createdata);
     const response = await axiosInstance2.post('/chat-rooms/', createdata);
     return response;
   } catch (error) {
@@ -44,8 +43,6 @@ export const create_group_chat = async (createdata: CreateMentorChatRequest) => 
 };
 
 export const start_chat = async (query: StartChatRequest, room_id: string, user_id: string) => {
-  console.log(query);
-  console.log(room_id);
   try {
     const response = await axiosInstance2.post(`/chat-rooms/${room_id}/messages/?user_id=${user_id}`, query);
     return response;
