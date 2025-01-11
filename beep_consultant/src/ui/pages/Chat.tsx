@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, Send, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { get_person_info, create_mentor_chat, create_group_chat, start_chat } from '../../api/chat_api';
+import { get_person_info, create_chat_room, start_chat } from '../../api/chat_api';
 import { useAuth } from '../../contexts/AuthContext';
 
 interface ChatParticipant {
@@ -54,25 +54,18 @@ const ChatPage = () => {
   const handleStartChat = async () => {
     try {
       const aiParticipants = participants.filter(p => !p.isUser);
-      const aiIds = aiParticipants.map(p => p.id);
+      const aiNames = aiParticipants.map(p => p.name);
       
       let response;
       if (userId) {
-        if (aiIds.length === 1) {
-          response = await create_mentor_chat({
-            title: `${aiParticipants[0].name}과의 상담`, 
-            person_ids: aiIds,
-            user_id: userId
+          response = await create_chat_room({
+            title: aiParticipants.length === 1 
+            ? `${aiParticipants[0].name}와의 상담`
+            : `${aiParticipants[0].name}와 ${aiParticipants[1].name}의 상담`, 
+            personNames: aiNames,
+            userId: userId
           });
-          setChatRoomID(response.data.room_id);
-        } else {
-          response = await create_group_chat({
-            title: `${aiParticipants[0].name}, ${aiParticipants[1].name}과의 상담`, 
-            person_ids: aiIds,
-            user_id: userId
-          });
-          setChatRoomID(response.data.room_id);
-        }
+          setChatRoomID(response.data.roomId);
       }
 
       
@@ -111,7 +104,7 @@ const ChatPage = () => {
         const joinMessage: ChatMessage = {
           id: Date.now().toString(),
           sender: 'system',
-          content: `${personInfo.name}님이 채팅방에 입장하셨습니다.`,
+          content: `${participantName}님이 채팅방에 입장하셨습니다.`,
           timestamp: new Date(),
           isSystem: true
         };

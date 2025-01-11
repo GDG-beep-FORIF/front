@@ -2,8 +2,8 @@ import { axiosInstance, axiosInstance2 } from './axiosInstance';
 
 interface CreateMentorChatRequest {
   title: string;
-  person_ids: string[];
-  user_id: string;
+  personNames: string[];
+  userId: string;
 }
 
 interface StartChatRequest {
@@ -22,19 +22,11 @@ export const get_person_info = async (name: string): Promise<any> => {
   }
 };
 
-export const create_mentor_chat = async (createdata: CreateMentorChatRequest) => {
+export const create_chat_room = async (createdata: CreateMentorChatRequest) => {
   try {
-    const response = await axiosInstance2.post('/chat-rooms/', createdata);
-    return response;
-  } catch (error) {
-    console.error('멘토 채팅방 생성 실패:', error);
-    throw error;
-  }
-};
-
-export const create_group_chat = async (createdata: CreateMentorChatRequest) => {
-  try {
-    const response = await axiosInstance2.post('/chat-rooms/', createdata);
+    console.log(createdata);
+    const response = await axiosInstance.post('/chat-rooms', createdata);
+    console.log(response);
     return response;
   } catch (error) {
     console.error('멘토 채팅방 생성 실패:', error);
@@ -45,6 +37,7 @@ export const create_group_chat = async (createdata: CreateMentorChatRequest) => 
 export const start_chat = async (query: StartChatRequest, room_id: string, user_id: string) => {
   try {
     const response = await axiosInstance2.post(`/chat-rooms/${room_id}/messages/?user_id=${user_id}`, query);
+    console.log(response);
     return response;
   } catch (error) {
     console.log("고민 상담 시작 실패 : ", error);
