@@ -67,7 +67,7 @@ const LoginForm: React.FC = () => {
 
       {/* Left side - Image/Title section */}
       <div className="flex-1 bg-light-green flex items-center justify-center max-sm:hidden">
-        <h1 className="text-3xl font-bold ">병아리그림</h1>
+        <h1 className="text-3xl font-bold "></h1>
       </div>
 
       {/* Right side - Login form */}
