@@ -1,20 +1,15 @@
-import React from 'react';
-import { Routes, Route, Navigate, BrowserRouter as Router } from 'react-router-dom';
-import LandingPage from './ui/pages/LandingPage';
+import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
+import DashBoard from "./ui/pages/DashBoardPage";
+import LandingPage from "./ui/pages/LandingPage";
 
 const AppRoutes = () => {
-
   return (
     <Routes>
-      <Route
-        path="/"
-        element={
-            <LandingPage />
-        }
-      />
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/dashboard" element={<DashBoard />} />
     </Routes>
   );
-}
+};
 
 function App() {
   return (
