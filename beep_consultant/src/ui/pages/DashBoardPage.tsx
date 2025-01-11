@@ -14,18 +14,21 @@ const Card = ({
   participants: string[];
   date: string;
 }) => (
-  <div className="bg-white rounded-lg shadow-md overflow-hidden">
-    <div className="w-full h-48 bg-black"></div>
-    <div className="p-4">
-      <h3 className="text-lg font-medium mb-2">{title}</h3>
-      <p className="text-gray-500 text-sm">
-        {participants}
-        <div className="flex justify-end">
-          <span>{date}</span>
-        </div>
-      </p>
+  <Link to="">
+    {" "}
+    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      <div className="w-full h-48 bg-black"></div>
+      <div className="p-4">
+        <h3 className="text-lg font-medium mb-2">{title}</h3>
+        <p className="text-gray-500 text-sm">
+          {participants}
+          <div className="flex justify-end">
+            <span>{date}</span>
+          </div>
+        </p>
+      </div>
     </div>
-  </div>
+  </Link>
 );
 const Dashboard = () => {
   const Cards = [
