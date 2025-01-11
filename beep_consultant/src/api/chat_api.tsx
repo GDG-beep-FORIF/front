@@ -2,8 +2,8 @@ import { axiosInstance, axiosInstance2 } from './axiosInstance';
 
 interface CreateMentorChatRequest {
   title: string;
-  person_ids: string[];
-  user_id: string;
+  personNames: string[];
+  userId: string;
 }
 
 interface StartChatRequest {
@@ -12,9 +12,7 @@ interface StartChatRequest {
 
 export const get_person_info = async (name: string): Promise<any> => {
   try {
-    console.log(name);
     const response = await axiosInstance.get(`/persons?name=${name}`);
-    console.log(response);
     return response;
   } catch (error) {
     console.error('화자 정보 불러오기 실패:', error);
@@ -22,19 +20,9 @@ export const get_person_info = async (name: string): Promise<any> => {
   }
 };
 
-export const create_mentor_chat = async (createdata: CreateMentorChatRequest) => {
+export const create_chat_room = async (createdata: CreateMentorChatRequest) => {
   try {
-    const response = await axiosInstance2.post('/chat-rooms/', createdata);
-    return response;
-  } catch (error) {
-    console.error('멘토 채팅방 생성 실패:', error);
-    throw error;
-  }
-};
-
-export const create_group_chat = async (createdata: CreateMentorChatRequest) => {
-  try {
-    const response = await axiosInstance2.post('/chat-rooms/', createdata);
+    const response = await axiosInstance.post('/chat-rooms', createdata);
     return response;
   } catch (error) {
     console.error('멘토 채팅방 생성 실패:', error);
