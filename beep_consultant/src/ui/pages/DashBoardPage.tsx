@@ -25,7 +25,7 @@ const Card = ({
   created_at: string;
   person_names: string[];
 }) => (
-  <Link to={`/chat/${room_id}`}>
+  <Link to={`/summary/${room_id}`} state={{ roomId: room_id }}>
     <div className="group bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden border border-gray-100">
       <div className="w-full h-36 sm:h-48 bg-[#558F6B] relative overflow-hidden">
         <div className="absolute inset-0 bg-black opacity-10 group-hover:opacity-0 transition-opacity duration-200" />
