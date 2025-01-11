@@ -39,7 +39,7 @@ const SummaryPage: React.FC<SummaryPageProps> = ({ markdown = "" }) => {
 
       try {
         const response = await fetch(
-          `${process.env.REACT_APP_API_BASE_URL}/chat-rooms/${roomId}?user_id=${userId}`
+          `${process.env.REACT_APP_API_BASE_URL3}/chat-rooms/${roomId}?user_id=${userId}`
         );
 
         if (!response.ok) {

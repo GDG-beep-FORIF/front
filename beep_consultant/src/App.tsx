@@ -1,11 +1,11 @@
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
+import ChatPage from "./ui/pages/Chat";
 import Dashboard from "./ui/pages/DashBoardPage";
 import LandingPage from "./ui/pages/LandingPage";
 import LoginPage from "./ui/pages/LoginPage";
 import SignUpPage from "./ui/pages/SignUp";
-import SummaryPage from "./ui/pages/Summary";
-import ChatPage from "./ui/pages/Chat";
+import Summary from "./ui/pages/Summary";
 
 const AppRoutes = () => {
   return (

@@ -1,7 +1,6 @@
 import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const userId = "bc430308-def0-4203-9971-437fdba5283a";
 
@@ -71,7 +70,7 @@ const Dashboard = () => {
     const fetchChatRooms = async () => {
       try {
         const response = await fetch(
-          `${process.env.REACT_APP_API_BASE_URL}/chat-rooms/?user_id=${userId}`
+          `${process.env.REACT_APP_API_BASE_URL3}/chat-rooms/?user_id=${userId}`
         );
         const data = await response.json();
         setChatRooms(data);
@@ -97,7 +96,7 @@ const Dashboard = () => {
   }, [isMobileMenuOpen]);
 
   const handleCreateChat = () => {
-    navigate('/chat');
+    navigate("/chat");
   };
 
   return (
@@ -218,7 +217,10 @@ const Dashboard = () => {
             )}
           </div>
 
-          <button className="fixed bottom-6 right-6 bg-dark-green text-white rounded-full p-3 sm:p-4 shadow-lg hover:bg-[#4A7D5D] transition-all duration-200 group" onClick={handleCreateChat}>
+          <button
+            className="fixed bottom-6 right-6 bg-dark-green text-white rounded-full p-3 sm:p-4 shadow-lg hover:bg-[#4A7D5D] transition-all duration-200 group"
+            onClick={handleCreateChat}
+          >
             <div className="flex items-center justify-center">
               <Plus className="w-5 h-5 sm:w-6 sm:h-6 group-hover:scale-110 transition-transform duration-200" />
               <span className="ml-2 text-sm sm:text-base font-medium">
