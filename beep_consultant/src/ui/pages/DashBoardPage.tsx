@@ -2,22 +2,26 @@ import { Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Card = ({
+  url,
+  img,
   title,
-  author,
-  duration,
+  participants,
+  date,
 }: {
+  url: string;
+  img: string[];
   title: string;
-  author: string;
-  duration: string;
+  participants: string[];
+  date: string;
 }) => (
   <div className="bg-white rounded-lg shadow-md overflow-hidden">
     <div className="w-full h-48 bg-black"></div>
     <div className="p-4">
       <h3 className="text-lg font-medium mb-2">{title}</h3>
       <p className="text-gray-500 text-sm">
-        {author}
+        {participants}
         <div className="flex justify-end">
-          <span>{duration}</span>
+          <span>{date}</span>
         </div>
       </p>
     </div>
@@ -26,39 +30,11 @@ const Card = ({
 const Dashboard = () => {
   const Cards = [
     {
+      url: "",
+      img: [""],
       title: "오늘 저녁밥 메뉴에 대한 고민상담",
-      author: "참여자 : 고죠 사토루, 이순신",
-      duration: "30분 전",
-    },
-    {
-      title: "오늘 저녁밥 메뉴에 대한 고민상담",
-      author: "참여자 : 고죠 사토루, 이순신",
-      duration: "30분 전",
-    },
-    {
-      title: "오늘 저녁밥 메뉴에 대한 고민상담",
-      author: "참여자 : 고죠 사토루, 이순신",
-      duration: "30분 전",
-    },
-    {
-      title: "오늘 저녁밥 메뉴에 대한 고민상담",
-      author: "참여자 : 고죠 사토루, 이순신",
-      duration: "30분 전",
-    },
-    {
-      title: "오늘 저녁밥 메뉴에 대한 고민상담",
-      author: "참여자 : 고죠 사토루, 이순신",
-      duration: "30분 전",
-    },
-    {
-      title: "오늘 저녁밥 메뉴에 대한 고민상담",
-      author: "참여자 : 고죠 사토루, 이순신",
-      duration: "30분 전",
-    },
-    {
-      title: "오늘 저녁밥 메뉴에 대한 고민상담",
-      author: "참여자 : 고죠 사토루, 이순신",
-      duration: "30분 전",
+      author: ["고죠 사토루", "이순신"],
+      duration: "2025-01-11",
     },
   ];
 
@@ -97,16 +73,18 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="flex-1 bg-lime-600 p-8">
+        <div className="flex-1 bg-green-100 p-8">
           <h2 className="text-lg mb-8">내 채팅 기록</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Cards.map((video, index) => (
+            {Cards.map((chat, index) => (
               <Card
                 key={index}
-                title={video.title}
-                author={video.author}
-                duration={video.duration}
+                url={chat.url}
+                img={chat.img}
+                title={chat.title}
+                participants={chat.author}
+                date={chat.duration}
               />
             ))}
           </div>
