@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, Send, Loader2 } from 'lucide-react';
+import { Search, Send, Loader2, Wifi, WifiOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { get_person_info, create_chat_room, start_chat } from '../../api/chat_api';
 import { useAuth } from '../../contexts/AuthContext';
+import { useChatWebSocket } from './../../api/chat_websocket';
 
 interface ChatParticipant {
   id: string;
@@ -33,6 +34,8 @@ const ChatPage = () => {
     }
   ]);
   const [newParticipant, setNewParticipant] = useState('');
+  const [aiList, setAIList] = useState<any[]>([]);
+  // const [initialQuery, setInitialQuery] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [currentMessage, setCurrentMessage] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -41,12 +44,27 @@ const ChatPage = () => {
   const navigate = useNavigate();
   const [chatRoomID, setChatRoomID] = useState('');
   const { user } = useAuth();
-  const userId = user?.userId;
+  const userId = user?.userId ?? '';
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const aiParticipants = participants.filter(p => !p.isUser);
+  const useWebSocket = aiParticipants.length === 2;
+  
+  const { messages: wsMessages, isConnected, error: wsError, sendMessage, summary, isChatEnded } = useChatWebSocket(
+    useWebSocket ? chatRoomID : '',
+    userId
+  );
+
+  useEffect(() => {
+    if (useWebSocket && wsMessages.length > 0) {
+      setMessages(prev => [...prev, wsMessages[wsMessages.length - 1]]);
+    }
+  }, [wsMessages, useWebSocket]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
+
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -56,29 +74,39 @@ const ChatPage = () => {
       const aiParticipants = participants.filter(p => !p.isUser);
       const aiNames = aiParticipants.map(p => p.name);
       
-      let response;
-      if (userId) {
-          response = await create_chat_room({
-            title: aiParticipants.length === 1 
-            ? `${aiParticipants[0].name}와의 상담`
-            : `${aiParticipants[0].name}와 ${aiParticipants[1].name}의 상담`, 
-            personNames: aiNames,
-            userId: userId
-          });
-          setChatRoomID(response.data.roomId);
-      }
+      if (!userId) return;
 
-      
-      const startMessage: ChatMessage = {
-        id: Date.now().toString(),
-        sender: 'system',
-        content: '채팅이 시작되었습니다.',
-        timestamp: new Date(),
-        isSystem: true
-      };
-      
-      setMessages(prev => [...prev, startMessage]);
-      
+      const response = await create_chat_room({
+        title: aiParticipants.length === 1 
+          ? `${aiParticipants[0].name}와의 상담`
+          : `${aiParticipants[0].name}와 ${aiParticipants[1].name}의 상담`, 
+        personNames: aiNames,
+        userId: userId
+      });
+
+      const roomId = response.data.roomId;
+      setChatRoomID(roomId);
+
+      // AI가 한 명일 경우 초기 시작 메시지 전송
+      if (aiParticipants.length === 1) {
+        const startMessage: ChatMessage = {
+          id: Date.now().toString(),
+          sender: 'system',
+          content: '채팅이 시작되었습니다.',
+          timestamp: new Date(),
+          isSystem: true
+        };
+
+        setMessages(prev => [...prev, startMessage]);
+      }
+      // AI가 두 명일 경우 WebSocket 연결 시작
+      else if (aiParticipants.length === 2) {
+        // WebSocket 연결은 useEffect에서 자동으로 처리됨
+        // 필요한 경우 여기서 초기 메시지를 WebSocket으로 전송할 수 있음
+        if (isConnected) {
+          await sendMessage('안녕하세요');
+        }
+      }
     } catch (error) {
       console.error('채팅방 생성 실패:', error);
     }
@@ -91,6 +119,7 @@ const ChatPage = () => {
       try {
         const response = await get_person_info(participantName);
         const personInfo = response.data;
+        setAIList(prev => [...prev, personInfo]);
         
         const newParticipant: ChatParticipant = {
           id: personInfo.id,
@@ -150,33 +179,35 @@ const ChatPage = () => {
       };
       const updatedMessages = [...messages, newMessage];
       setMessages(updatedMessages);
+      // if (initialQuery === '') {
+      //   setInitialQuery(currentMessage);
+      // }
       setCurrentMessage('');
 
       try {
-        const response = await start_chat({
-          content: currentMessage
-        }, chatRoomID, userId);
+        const aiParticipants = participants.filter(p => !p.isUser);
         
-        let senderName, senderID;
-        if (participants.length == 2) {
-          const ai_mentor = participants.filter(p => !p.isUser)[0]
-          senderName = ai_mentor.name;
-          senderID = ai_mentor.id;
-        } else {
-          // senderName, senderID for 2-AI chat
+        if (aiParticipants.length === 1) {
+          // 단일 AI 상담일 경우 HTTP API 사용
+          const response = await start_chat({
+            content: currentMessage
+          }, chatRoomID, userId);
+          
+          const newAImessage = {
+            id: response.data.message_id,
+            sender: aiParticipants[0].name,
+            senderId: aiParticipants[0].id,
+            content: response.data.ai_response.content,
+            timestamp: new Date(response.data.created_at),
+            isAI: true,
+            isSystem: false
+          };
+          
+          setMessages([...updatedMessages, newAImessage]);
+        } else if (aiParticipants.length === 2 && isConnected) {
+          // 두 명의 AI 상담일 경우 WebSocket 사용
+          await sendMessage(currentMessage);
         }
-        const newAImessage = {
-          id: response.data.message_id,
-          sender: senderName || '',
-          senderId: senderID,
-          content: response.data.ai_response.content,
-          timestamp: new Date(response.data.created_at),
-          isAI: true,
-          isSystem: false
-        }
-
-        setMessages([...updatedMessages, newAImessage]);
-      
       } catch (error) {
         console.error('메시지 전송 실패:', error);
       } finally {
@@ -185,8 +216,56 @@ const ChatPage = () => {
     }
   };
 
+  // const renderMessage = (message: ChatMessage) => {
+  //   if (message.isSystem) {
+  //     return (
+  //       <div className="flex justify-center">
+  //         <div className="bg-gray-100 text-gray-600 px-4 py-2 rounded-lg text-sm">
+  //           {message.content}
+  //         </div>
+  //       </div>
+  //     );
+  //   }
+
+  //   const sender = participants.find(p => p.id === message.senderId);
+  //   const isAI = !message.isSystem && sender && !sender.isUser;
+
+  //   if (isAI) {
+  //     return (
+  //       <div className="flex items-start space-x-3">
+  //         <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
+  //           {sender?.image_url ? (
+  //             <img 
+  //               src={sender.image_url} 
+  //               alt={sender.name}
+  //               className="w-full h-full object-cover"
+  //             />
+  //           ) : (
+  //             <div className="w-full h-full bg-gray-200 flex items-center justify-center text-sm">
+  //               {sender?.name.charAt(0)}
+  //             </div>
+  //           )}
+  //         </div>
+  //         <div>
+  //           <div className="text-sm text-gray-600 mb-1">{sender?.name}</div>
+  //           <div className="bg-white px-4 py-2 rounded-lg shadow-sm">
+  //             {message.content}
+  //           </div>
+  //         </div>
+  //       </div>
+  //     );
+  //   }
+  //   return (
+  //     <div className="flex justify-end">
+  //       <div className="bg-green-100 px-4 py-2 rounded-lg max-w-[70%]">
+  //         {message.content}
+  //       </div>
+  //     </div>
+  //   );
+  // };
   const renderMessage = (message: ChatMessage) => {
     if (message.isSystem) {
+      // 시스템 메시지 렌더링 (변경 없음)
       return (
         <div className="flex justify-center">
           <div className="bg-gray-100 text-gray-600 px-4 py-2 rounded-lg text-sm">
@@ -195,28 +274,27 @@ const ChatPage = () => {
         </div>
       );
     }
-
-    const sender = participants.find(p => p.id === message.senderId);
-    const isAI = !message.isSystem && sender && !sender.isUser;
-
-    if (isAI) {
+  
+    // AI 메시지 렌더링
+    if (message.isAI) {  // isAI 플래그로 직접 체크
+      const sender = participants.find(p => p.name === message.sender);  // speaker로 참가자 찾기
       return (
         <div className="flex items-start space-x-3">
           <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
             {sender?.image_url ? (
               <img 
                 src={sender.image_url} 
-                alt={sender.name}
+                alt={message.sender}
                 className="w-full h-full object-cover"
               />
             ) : (
               <div className="w-full h-full bg-gray-200 flex items-center justify-center text-sm">
-                {sender?.name.charAt(0)}
+                {message.sender.charAt(0)}
               </div>
             )}
           </div>
           <div>
-            <div className="text-sm text-gray-600 mb-1">{sender?.name}</div>
+            <div className="text-sm text-gray-600 mb-1">{message.sender}</div>
             <div className="bg-white px-4 py-2 rounded-lg shadow-sm">
               {message.content}
             </div>
@@ -224,6 +302,8 @@ const ChatPage = () => {
         </div>
       );
     }
+  
+    // 사용자 메시지 렌더링 (이 부분 코드도 추가해야 함)
     return (
       <div className="flex justify-end">
         <div className="bg-green-100 px-4 py-2 rounded-lg max-w-[70%]">
@@ -232,6 +312,7 @@ const ChatPage = () => {
       </div>
     );
   };
+
 
   return (
     <div className="min-h-screen bg-white flex">
@@ -343,54 +424,145 @@ const ChatPage = () => {
             })}
           </div>
         </div>
+        {/* 연결 상태 표시 */}
+        {!isConnected && chatRoomID && aiParticipants.length === 2 && (
+          <div className="bg-red-50 p-2 text-red-600 text-center flex items-center justify-center">
+            <WifiOff size={16} className="mr-2" />
+            <span>연결이 끊어졌습니다. 재연결 중...</span>
+          </div>
+        )}
 
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-6 bg-light-green">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {messages.map((message) => (
             <div key={message.id}>
               {renderMessage(message)}
             </div>
           ))}
-          {isMessageLoading && (
-            <div className="flex ml-12">
-              <div className="bg-white px-4 py-2 rounded-lg shadow-sm flex items-center">
-                <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                <span className="text-sm text-gray-600">답변 작성 중...</span>
-              </div>
-            </div>
-          )}
-
           <div ref={messagesEndRef} />
         </div>
 
         {/* Message Input */}
-        <div className="bg-white p-4 border-t border-gray-200 sticky bottom-0">
+        {/* <div className="bg-white p-4 border-t border-gray-200">
           <div className="flex items-center space-x-2">
             <input
               type="text"
               value={currentMessage}
               onChange={(e) => setCurrentMessage(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-              placeholder="고민을 알려주세요!"
-              className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500"
-              disabled={isMessageLoading}
+              placeholder="메시지를 입력하세요..."
+              className="flex-1 p-2 border border-gray-300 rounded-lg"
+              disabled={(aiParticipants.length === 2 && !isConnected) || !chatRoomID}
             />
             <button
               onClick={handleSendMessage}
-              disabled={isMessageLoading}
-              className={`p-2 rounded-lg transition-colors ${
-                isMessageLoading 
-                ? 'bg-gray-300 cursor-not-allowed' 
-                : 'bg-green-500 hover:bg-green-600'
-              } text-white`}
+              disabled={(aiParticipants.length === 2 && !isConnected) || !chatRoomID}
+              className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:bg-gray-300"
             >
-              {isMessageLoading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <Send size={20} />
-              )}
+              <Send size={20} />
             </button>
           </div>
+        </div>
+      </div>
+    </div> */}
+    {/* <div className="bg-white p-4 border-t border-gray-200">
+          {isChatEnded ? (
+            <div className="flex justify-center">
+              <button
+                onClick={() => navigate(`/summary/${chatRoomID}`, { state: { summary } })}
+                className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 flex items-center space-x-2"
+              >
+                <span>토론 종료. 요약 보러 가기</span>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center space-x-2">
+              <input
+                type="text"
+                value={currentMessage}
+                onChange={(e) => setCurrentMessage(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                placeholder="메시지를 입력하세요..."
+                className="flex-1 p-2 border border-gray-300 rounded-lg"
+                disabled={!isConnected || !chatRoomID}
+              />
+              <button
+                onClick={handleSendMessage}
+                disabled={!isConnected || !chatRoomID}
+                className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:bg-gray-300"
+              >
+                <Send size={20} />
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div> */}
+    <div className="bg-white p-4 border-t border-gray-200">
+          {useWebSocket ? (
+            // WebSocket 사용 시 (AI 2명)
+            isChatEnded ? (
+              <div className="flex justify-center">
+                <button
+                  onClick={() => navigate(`/summary/${chatRoomID}`, { state: { 
+                    summary,
+                    aiList
+                  } })}
+                  className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 flex items-center space-x-2"
+                >
+                  <span>토론 종료. 요약 보러 가기</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-2">
+                <input
+                  type="text"
+                  value={currentMessage}
+                  onChange={(e) => setCurrentMessage(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                  placeholder="메시지를 입력하세요..."
+                  className="flex-1 p-2 border border-gray-300 rounded-lg"
+                  disabled={!isConnected || !chatRoomID}
+                />
+                <button
+                  onClick={handleSendMessage}
+                  disabled={!isConnected || !chatRoomID}
+                  className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:bg-gray-300"
+                >
+                  <Send size={20} />
+                </button>
+              </div>
+            )
+          ) : (
+            // HTTP API 사용 시 (AI 1명)
+            <div className="flex items-center space-x-2">
+              <input
+                type="text"
+                value={currentMessage}
+                onChange={(e) => setCurrentMessage(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                placeholder="메시지를 입력하세요..."
+                className="flex-1 p-2 border border-gray-300 rounded-lg"
+                disabled={isMessageLoading || !chatRoomID}
+              />
+              <button
+                onClick={handleSendMessage}
+                disabled={isMessageLoading || !chatRoomID}
+                className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:bg-gray-300"
+              >
+                {isMessageLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Send size={20} />
+                )}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

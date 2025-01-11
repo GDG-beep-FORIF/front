@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import { axiosInstance2 } from "../../api/axiosInstance";
 
 export interface DataFrom {
   room_id: string;
@@ -19,37 +20,49 @@ export interface Person {
 }
 
 interface SummaryPageProps {
-  markdown?: string;
+  summary?: string;
+  aiList?: any[]
 }
 
-const SummaryPage: React.FC<SummaryPageProps> = ({ markdown = "" }) => {
+const SummaryPage: React.FC<SummaryPageProps> = () => {
   const { roomId } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [detailData, setDetailData] = useState<DataFrom | null>(null);
+  const [summaryContent, setSummaryContent] = useState<string>("");
   const { user } = useAuth();
 
+  // Get summary from navigation state
+  const { summary: locationSummary, aiList } = location.state || {};
+  console.log(aiList);
+
   useEffect(() => {
-    const fetchChatRooms = async () => {
-      if (!roomId) return;
+    const fetchData = async () => {
+      if (!roomId || !user?.userId) return;
 
       setIsLoading(true);
       setError(null);
 
       try {
-        const response = await fetch(
-          `${process.env.REACT_APP_API_BASE_URL2}/chat-rooms/${roomId}?user_id=${user?.userId}`
+        // Fetch chat room basic info
+        const detailResponse = await axiosInstance2.get(
+          `/chat-rooms/${roomId}?user_id=${user.userId}`
         );
+        setDetailData(detailResponse.data);
 
-        if (!response.ok) {
-          throw new Error("데이터를 불러오는데 실패했습니다.");
+        // Get summary from location state or fetch from API if not available
+        if (locationSummary) {
+          setSummaryContent(locationSummary);
+        } else {
+          const summaryResponse = await axiosInstance2.get(
+            `/chat-rooms/${roomId}/summary?user_id=${user.userId}`
+          );
+          setSummaryContent(summaryResponse.data.summary || "");
         }
-
-        const data = await response.json();
-        setDetailData(data);
       } catch (error) {
-        console.error("Error fetching chat rooms:", error);
+        console.error("Error fetching data:", error);
         setError(
           error instanceof Error
             ? error.message
@@ -60,8 +73,8 @@ const SummaryPage: React.FC<SummaryPageProps> = ({ markdown = "" }) => {
       }
     };
 
-    fetchChatRooms();
-  }, [roomId]);
+    fetchData();
+  }, [roomId, user?.userId, locationSummary]);
 
   if (isLoading) {
     return (
@@ -129,46 +142,50 @@ const SummaryPage: React.FC<SummaryPageProps> = ({ markdown = "" }) => {
         </p>
 
         <div className="space-y-6 mb-12">
-          {detailData.persons.map((person) => (
+          {aiList.map((person: any) => (
             <div
-              key={person.person_id}
+              key={person.id}
               className="p-4 flex space-x-4 border rounded-lg shadow-sm hover:shadow-md transition-shadow"
             >
               <div className="w-32 h-32 bg-[#EBF2EE] flex items-center justify-center flex-shrink-0 rounded-lg"></div>
               <div className="flex-grow">
-                <h3 className="font-medium mb-1">이름: {person.name}</h3>
+                <h3 className="font-medium mb-1">{person.name}</h3>
                 {person.era && (
-                  <p className="text-gray-600 mb-1">시대: {person.era}</p>
+                  <p className="text-gray-600 mb-1">{person.era}</p>
                 )}
-                {person.description && (
-                  <p className="text-gray-700">{person.description}</p>
+                {person.achievements && person.achievements.length > 0 && (
+                  <div className="mt-2">
+                    {person.achievements.slice(0, 3).map((item: any) => (
+                      <p key={item.id} className="text-gray-700">{item.achievementName}</p>
+                    ))}
+                  </div>
                 )}
               </div>
             </div>
           ))}
         </div>
 
-        {detailData.summary && (
-          <div className="space-y-6">
-            <div className="prose max-w-none">{detailData.summary}</div>
+        {summaryContent && (
+          <div className="mt-8 prose max-w-none">
+            <div className="bg-gray-50 p-6 rounded-lg">
+              {summaryContent}
+            </div>
           </div>
         )}
 
         <div className="mt-12 space-y-4">
-          <div className="mt-12 space-y-4">
-            <button
-              onClick={() => navigate("/dashboard")}
-              className="w-full bg-dark-green text-white py-3 rounded-md hover:bg-dark-green/90 transition-colors"
-            >
-              대시보드로 돌아가기
-            </button>
-            <button
-              onClick={() => navigate("/chat")}
-              className="w-full bg-yellow-50 text-black py-3 rounded-md hover:bg-yellow-100 transition-colors"
-            >
-              채팅보러가기
-            </button>
-          </div>
+          <button
+            onClick={() => navigate("/dashboard")}
+            className="w-full bg-dark-green text-white py-3 rounded-md hover:bg-dark-green/90 transition-colors"
+          >
+            대시보드로 돌아가기
+          </button>
+          <button
+            onClick={() => navigate("/chat")}
+            className="w-full bg-yellow-50 text-black py-3 rounded-md hover:bg-yellow-100 transition-colors"
+          >
+            채팅보러가기
+          </button>
         </div>
       </div>
     </div>
