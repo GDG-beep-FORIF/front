@@ -2,16 +2,7 @@ import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-
-const userId = "bc430308-def0-4203-9971-437fdba5283a";
-
-interface ChatRoom {
-  room_id: string;
-  title: string;
-  status: "ACTIVE" | "INACTIVE";
-  created_at: string;
-  person_names: string[];
-}
+import { useAuth } from "../../contexts/AuthContext";
 
 const Card = ({
   room_id,
@@ -62,28 +53,34 @@ const Card = ({
 );
 
 const Dashboard = () => {
-  const [chatRooms, setChatRooms] = useState<ChatRoom[]>([]);
+  const [chatRooms, setChatRooms] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchChatRooms = async () => {
       try {
         const response = await fetch(
-          `${process.env.REACT_APP_API_BASE_URL}/chat-rooms/?user_id=${userId}`
+          `${process.env.REACT_APP_API_BASE_URL2}/chat-rooms/?user_id=${user?.userId}`
         );
         const data = await response.json();
-        setChatRooms(data);
+        setChatRooms(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error("Error fetching chat rooms:", error);
+        setChatRooms([]);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchChatRooms();
-  }, []);
+    if (user?.userId) {
+      fetchChatRooms();
+    } else {
+      navigate('/login');
+    }
+  }, [user, navigate]);
 
   useEffect(() => {
     if (isMobileMenuOpen) {
@@ -201,6 +198,10 @@ const Dashboard = () => {
                     <div className="h-4 bg-gray-200 rounded w-1/2" />
                   </div>
                 ))}
+              </div>
+            ) : chatRooms.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-gray-600">채팅 기록이 없습니다.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
