@@ -53,20 +53,20 @@ const LoginForm: React.FC = () => {
     return (
         <div className="min-h-screen flex">
           {/* Navigation Bar */}
-            <nav className="flex items-center justify-between px-6 py-4 fixed top-0 left-1/2 transform -translate-x-1/2 w-full max-w-6xl mx-auto z-50">
-                    <div className="text-dark-green2 font-semibold text-xl" onClick={() => navigate("/")}>
+            <nav className="md:w-[30%] flex items-center justify-between px-6 py-4 fixed top-0 left-1/2 transform -translate-x-1/2 w-full max-w-6xl mx-auto z-50">
+                    <div className="text-gray-600 font-semibold text-xl" onClick={() => navigate("/")}>
                     🐥 삐약상담소
                     </div>
                     <div></div>
             </nav>
 
             {/* Left side - Image/Title section */}
-            <div className="flex-1 bg-light-green flex items-center justify-center">
-                <h1 className="text-3xl font-bold">병아리그림</h1>
+            <div className="hidden md:block w-full md:w-[30%] bg-light-green flex items-center justify-center">
+                <h1 className="text-3xl font-bold"></h1>
             </div>
 
             {/* Right side - Login form */}
-            <div className="flex-1 bg-white flex items-center justify-center p-8">
+            <div className="w-full md:w-[70%] bg-white flex items-center justify-center p-8">
                 <div className="w-full max-w-md space-y-8">
                     <div className="text-center">
                         <h2 className="text-2xl font-semibold text-dark-green mb-12">
