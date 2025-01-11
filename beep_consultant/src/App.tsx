@@ -1,23 +1,30 @@
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
-import DashBoard from "./ui/pages/DashBoardPage";
+import { AuthProvider } from "./contexts/AuthContext";
+import Dashboard from "./ui/pages/DashBoardPage";
 import LandingPage from "./ui/pages/LandingPage";
+import LoginPage from "./ui/pages/LoginPage";
+import SignUpPage from "./ui/pages/SignUp";
 
 const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
-      <Route path="/dashboard" element={<DashBoard />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<SignUpPage />} />
+      <Route path="/dashboard" element={<Dashboard />} />
     </Routes>
   );
 };
 
 function App() {
   return (
-    <Router>
-      <div className="App">
-        <AppRoutes />
-      </div>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <div className="App">
+          <AppRoutes />
+        </div>
+      </Router>
+    </AuthProvider>
   );
 }
 
