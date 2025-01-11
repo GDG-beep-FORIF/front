@@ -63,7 +63,7 @@ const SignUpPage: React.FC = () => {
             </nav>
 
       {/* Right side - Login form */}
-      <div className="flex-1 bg-white flex items-center justify-center p-8">
+      <div className="w-full md:w-[70%] bg-white flex items-center justify-center p-8">
         <div className="w-full max-w-md space-y-8">
           <div className="text-center">
             <h2 className="text-2xl font-semibold text-dark-green mb-12">회원가입</h2>
@@ -142,8 +142,8 @@ const SignUpPage: React.FC = () => {
       </div>
 
       {/* Left side - Image/Title section */}
-      <div className="flex-1 bg-light-green flex items-center justify-center">
-        <h1 className="text-3xl font-bold">병아리그림</h1>
+      <div className="hidden md:block w-full md:w-[30%] bg-light-green flex items-center justify-center">
+        <h1 className="text-3xl font-bold"></h1>
       </div>
 
     </div>
