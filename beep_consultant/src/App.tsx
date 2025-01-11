@@ -3,6 +3,8 @@ import { Routes, Route, Navigate, BrowserRouter as Router } from 'react-router-d
 import LandingPage from './ui/pages/LandingPage';
 import LoginPage from './ui/pages/LoginPage';
 import SignUpPage from './ui/pages/SignUp';
+import SummaryPage from './ui/pages/Summary';
+import ChatPage from './ui/pages/Chat';
 import { AuthProvider } from './contexts/AuthContext';
 
 const AppRoutes = () => {
@@ -12,7 +14,8 @@ const AppRoutes = () => {
       <Route
         path="/"
         element={
-            <LandingPage />
+          <ChatPage />
+            // <LandingPage />
         }
       />
       <Route
