@@ -1,6 +1,7 @@
 import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const userId = "bc430308-def0-4203-9971-437fdba5283a";
 
@@ -64,6 +65,7 @@ const Dashboard = () => {
   const [chatRooms, setChatRooms] = useState<ChatRoom[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchChatRooms = async () => {
@@ -93,6 +95,10 @@ const Dashboard = () => {
       document.body.style.overflow = "unset";
     };
   }, [isMobileMenuOpen]);
+
+  const handleCreateChat = () => {
+    navigate('/chat');
+  };
 
   return (
     <div className="min-h-screen bg-[#F7FAF8]">
@@ -212,7 +218,7 @@ const Dashboard = () => {
             )}
           </div>
 
-          <button className="fixed bottom-6 right-6 bg-[#558F6B] text-white rounded-full p-3 sm:p-4 shadow-lg hover:bg-[#4A7D5D] transition-all duration-200 group">
+          <button className="fixed bottom-6 right-6 bg-dark-green text-white rounded-full p-3 sm:p-4 shadow-lg hover:bg-[#4A7D5D] transition-all duration-200 group" onClick={handleCreateChat}>
             <div className="flex items-center justify-center">
               <Plus className="w-5 h-5 sm:w-6 sm:h-6 group-hover:scale-110 transition-transform duration-200" />
               <span className="ml-2 text-sm sm:text-base font-medium">

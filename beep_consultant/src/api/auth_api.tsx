@@ -1,11 +1,11 @@
-import axiosInstance from './axiosInstance';
+import { axiosInstance } from './axiosInstance';
 
 interface LoginResponse {
-    accessToken: string;
+  email: string;
+  userId: string;
 }
 
 interface SignupData {
-    name: string;
     username: string;
     password: string;
     email: string;
@@ -13,17 +13,18 @@ interface SignupData {
 
 export const signup = async (signupData: SignupData): Promise<void> => {
     try {
-      const response = await axiosInstance.post('/auth/signup', signupData);
+      const response = await axiosInstance.post('/api/sign-up', signupData);
     } catch (error) {
       console.error('회원가입 실패:', error);
       throw error;
     }
 };
 
-export const login = async (username: string, password: string): Promise<any> => {
+export const login = async (email: string, password: string): Promise<any> => {
     try {
-      const response = await axiosInstance.post<LoginResponse>('/auth/login', { username, password });
-      return response;
+      const response = await axiosInstance.post<LoginResponse>('/api/sign-in', { email: email, password: password });
+      console.log(response);
+      return response.data;
     } catch (error) {
       console.error('Login failed:', error);
       throw error;
