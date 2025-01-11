@@ -1,15 +1,8 @@
 import React, { useState } from 'react';
 import { Search, Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { get_person_info } from '../../api/chat_api';
-
-interface PersonResponse {
-  data: {
-    id: string;
-    name: string;
-    avatar?: string;
-  }
-}
+import { get_person_info, create_mentor_chat, create_group_chat, start_chat } from '../../api/chat_api';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface ChatParticipant {
   id: string;
@@ -44,19 +37,67 @@ const ChatPage = () => {
   const [currentMessage, setCurrentMessage] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const navigate = useNavigate();
+  const [chatRoomID, setChatRoomID] = useState('');
+  const { user } = useAuth();
+  const userId = user?.userId;
+
+  const handleStartChat = async () => {
+    try {
+      const aiParticipants = participants.filter(p => !p.isUser);
+      console.log(aiParticipants);
+      const aiIds = aiParticipants.map(p => p.id);
+      
+      let response;
+      if (userId) {
+        if (aiIds.length === 1) {
+          console.log(aiIds);
+          response = await create_mentor_chat({
+            title: `${aiParticipants[0].name}과의 상담`, 
+            person_ids: aiIds,
+            user_id: userId
+          });
+          console.log(response.data.room_id);
+          setChatRoomID(response.data.room_id);
+          console.log(chatRoomID);
+        } else {
+          response = await create_group_chat({
+            title: `${aiParticipants[0].name}, ${aiParticipants[1].name}과의 상담`, 
+            person_ids: aiIds,
+            user_id: userId
+          });
+          console.log(response.data.room_id);
+          setChatRoomID(response.data.room_id);
+          console.log(chatRoomID);
+        }
+      }
+
+      
+      const startMessage: ChatMessage = {
+        id: Date.now().toString(),
+        sender: 'system',
+        content: '채팅이 시작되었습니다.',
+        timestamp: new Date(),
+        isSystem: true
+      };
+      
+      setMessages(prev => [...prev, startMessage]);
+      
+    } catch (error) {
+      console.error('채팅방 생성 실패:', error);
+    }
+  };
 
   const handleAddParticipant = async () => {
     const participantName = newParticipant.trim();
     if (participantName && participants.length < 3) {
       try {
-        console.log(participantName);
         const response = await get_person_info(participantName);
         const personInfo = response.data;
         
         const newParticipant: ChatParticipant = {
-          id: personInfo.person_id,
+          id: personInfo.id,
           name: personInfo.name,
-          image_url: personInfo.image_url,
+          image_url: personInfo.imageUrl,
           joinedAt: new Date()
         };
         
@@ -75,11 +116,9 @@ const ChatPage = () => {
         setIsSearching(false);
       } catch (error) {
         console.error('참가자 정보 조회 실패:', error);
-        // 에러 처리를 위한 상태 추가 가능
       }
     }
   };
-
 
   const handleRemoveParticipant = (id: string) => {
     if (id === 'user') return;
@@ -100,15 +139,41 @@ const ChatPage = () => {
     }
   };
 
-  const handleSendMessage = () => {
-    if (currentMessage.trim()) {
+  const handleSendMessage = async () => {
+    if (currentMessage.trim() && userId) {
       const newMessage: ChatMessage = {
         id: Date.now().toString(),
         sender: '나',
         content: currentMessage,
         timestamp: new Date()
       };
-      setMessages([...messages, newMessage]);
+      const updatedMessages = [...messages, newMessage];
+      setMessages(updatedMessages);
+
+      const response = await start_chat({
+        content: currentMessage
+      }, chatRoomID, userId);
+      console.log(response);
+      
+      let senderName, senderID;
+      if (participants.length == 2) {
+        const ai_mentor = participants.filter(p => !p.isUser)[0]
+        senderName = ai_mentor.name;
+        senderID = ai_mentor.id;
+      } else {
+        // senderName, senderID for 2-AI chat
+      }
+      const newAImessage = {
+        id: response.data.message_id,
+        sender: senderName || '',
+        senderId: senderID,
+        content: response.data.ai_response.content,
+        timestamp: new Date(response.data.created_at),
+        isAI: true,
+        isSystem: false
+      }
+
+      setMessages([...updatedMessages, newAImessage]);
       setCurrentMessage('');
     }
   };
@@ -161,22 +226,29 @@ const ChatPage = () => {
     );
   };
 
-
   return (
     <div className="min-h-screen bg-white flex">
       {/* Left Sidebar */}
       <div className="w-80 bg-white border-r border-gray-200 p-4">
         <nav className="flex items-center justify-between px-6 py-4 w-full max-w-6xl mx-auto z-50">
-            <div 
+          <div 
             className="text-dark-green font-semibold text-xl cursor-pointer" 
             onClick={() => navigate("/")}
-            >
+          >
             🐥 삐약상담소
-            </div>
-            <div></div>
+          </div>
+          <div></div>
         </nav>
         <div className="mb-6 ml-4 mt-8">
           <h2 className="text-xl font-bold mb-4">삐약님의 고민을 알려주세요!</h2>
+          {participants.length > 1 && (
+            <button
+              onClick={handleStartChat}
+              className="w-full bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition-colors mb-4"
+            >
+              채팅 시작하기
+            </button>
+          )}
           {participants.map((participant) => (
             <div
               key={participant.id}
@@ -269,7 +341,7 @@ const ChatPage = () => {
         </div>
 
         {/* Message Input */}
-        <div className="bg-white p-4 border-t border-gray-200">
+        <div className="bg-white p-4 border-t border-gray-200 sticky bottom-0">
           <div className="flex items-center space-x-2">
             <input
               type="text"

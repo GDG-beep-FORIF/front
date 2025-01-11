@@ -11,10 +11,10 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
-      {/* <Route path="/" element={<ChatPage />} /> */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignUpPage />} />
       <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/chat" element={<ChatPage />} />
     </Routes>
   );
 };

@@ -4,7 +4,7 @@ import { login } from "../../api/auth_api";
 import { useAuth } from "../../contexts/AuthContext";
 
 interface LoginForm {
-    username: string;
+    email: string;
     password: string;
 }
 
@@ -12,7 +12,7 @@ const LoginForm: React.FC = () => {
     const navigate = useNavigate();
     const { login: authLogin, user } = useAuth();
     const [formData, setFormData] = useState<LoginForm>({
-        username: "",
+        email: "",
         password: "",
     });
     const [error, setError] = useState<string>("");
@@ -34,16 +34,18 @@ const LoginForm: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (!formData.username.trim() || !formData.password.trim()) {
+        if (!formData.email.trim() || !formData.password.trim()) {
             setError("모든 필드를 입력해주세요.");
             return;
         }
 
         try {
-            const response = await login(formData.username, formData.password);
+            const response = await login(formData.email, formData.password);
+            console.log(response);
             authLogin({
-                user: response.data.user,
+                user: response
             });
+            console.log("auth login success");
             navigate("/dashboard");
         } catch (error: any) {
             setError("이메일 또는 비밀번호가 올바르지 않습니다.");
@@ -83,10 +85,10 @@ const LoginForm: React.FC = () => {
                                     이메일
                                 </label>
                                 <input
-                                    id="username"
-                                    name="username"
+                                    id="email"
+                                    name="email"
                                     type="text"
-                                    value={formData.username}
+                                    value={formData.email}
                                     onChange={handleChange}
                                     className="mt-1 block w-full border-0 border-b-2 border-light-green focus:outline-none focus:ring-0 focus:border-dark-green py-3 px-3"
                                 />
