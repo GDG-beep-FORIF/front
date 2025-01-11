@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Search, Send } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Search, Send, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { get_person_info, create_mentor_chat, create_group_chat, start_chat } from '../../api/chat_api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -36,10 +36,20 @@ const ChatPage = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [currentMessage, setCurrentMessage] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const [isAddingParticipant, setIsAddingParticipant] = useState(false);
+  const [isMessageLoading, setIsMessageLoading] = useState(false);
   const navigate = useNavigate();
   const [chatRoomID, setChatRoomID] = useState('');
   const { user } = useAuth();
   const userId = user?.userId;
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const handleStartChat = async () => {
     try {
@@ -84,6 +94,7 @@ const ChatPage = () => {
   const handleAddParticipant = async () => {
     const participantName = newParticipant.trim();
     if (participantName && participants.length < 3) {
+      setIsAddingParticipant(true);
       try {
         const response = await get_person_info(participantName);
         const personInfo = response.data;
@@ -110,6 +121,8 @@ const ChatPage = () => {
         setIsSearching(false);
       } catch (error) {
         console.error('참가자 정보 조회 실패:', error);
+      } finally {
+        setIsAddingParticipant(false);
       }
     }
   };
@@ -135,6 +148,7 @@ const ChatPage = () => {
 
   const handleSendMessage = async () => {
     if (currentMessage.trim() && userId) {
+      setIsMessageLoading(true);
       const newMessage: ChatMessage = {
         id: Date.now().toString(),
         sender: '나',
@@ -143,31 +157,38 @@ const ChatPage = () => {
       };
       const updatedMessages = [...messages, newMessage];
       setMessages(updatedMessages);
-
-      const response = await start_chat({
-        content: currentMessage
-      }, chatRoomID, userId);
-      
-      let senderName, senderID;
-      if (participants.length == 2) {
-        const ai_mentor = participants.filter(p => !p.isUser)[0]
-        senderName = ai_mentor.name;
-        senderID = ai_mentor.id;
-      } else {
-        // senderName, senderID for 2-AI chat
-      }
-      const newAImessage = {
-        id: response.data.message_id,
-        sender: senderName || '',
-        senderId: senderID,
-        content: response.data.ai_response.content,
-        timestamp: new Date(response.data.created_at),
-        isAI: true,
-        isSystem: false
-      }
-
-      setMessages([...updatedMessages, newAImessage]);
       setCurrentMessage('');
+
+      try {
+        const response = await start_chat({
+          content: currentMessage
+        }, chatRoomID, userId);
+        
+        let senderName, senderID;
+        if (participants.length == 2) {
+          const ai_mentor = participants.filter(p => !p.isUser)[0]
+          senderName = ai_mentor.name;
+          senderID = ai_mentor.id;
+        } else {
+          // senderName, senderID for 2-AI chat
+        }
+        const newAImessage = {
+          id: response.data.message_id,
+          sender: senderName || '',
+          senderId: senderID,
+          content: response.data.ai_response.content,
+          timestamp: new Date(response.data.created_at),
+          isAI: true,
+          isSystem: false
+        }
+
+        setMessages([...updatedMessages, newAImessage]);
+      
+      } catch (error) {
+        console.error('메시지 전송 실패:', error);
+      } finally {
+        setIsMessageLoading(false);
+      }
     }
   };
 
@@ -287,12 +308,18 @@ const ChatPage = () => {
                     onKeyPress={(e) => e.key === 'Enter' && handleAddParticipant()}
                     placeholder="대화 상대 이름"
                     className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500"
+                    disabled={isAddingParticipant}
                   />
                   <button
                     onClick={handleAddParticipant}
+                    disabled={isAddingParticipant}
                     className="ml-2 p-2 text-green-600 hover:text-green-700"
                   >
-                    추가
+                    {isAddingParticipant ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      "추가"
+                    )}
                   </button>
                 </div>
               ) : (
@@ -331,6 +358,16 @@ const ChatPage = () => {
               {renderMessage(message)}
             </div>
           ))}
+          {isMessageLoading && (
+            <div className="flex ml-12">
+              <div className="bg-white px-4 py-2 rounded-lg shadow-sm flex items-center">
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                <span className="text-sm text-gray-600">답변 작성 중...</span>
+              </div>
+            </div>
+          )}
+
+          <div ref={messagesEndRef} />
         </div>
 
         {/* Message Input */}
@@ -343,12 +380,22 @@ const ChatPage = () => {
               onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
               placeholder="고민을 알려주세요!"
               className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500"
+              disabled={isMessageLoading}
             />
             <button
               onClick={handleSendMessage}
-              className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+              disabled={isMessageLoading}
+              className={`p-2 rounded-lg transition-colors ${
+                isMessageLoading 
+                ? 'bg-gray-300 cursor-not-allowed' 
+                : 'bg-green-500 hover:bg-green-600'
+              } text-white`}
             >
-              <Send size={20} />
+              {isMessageLoading ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <Send size={20} />
+              )}
             </button>
           </div>
         </div>
