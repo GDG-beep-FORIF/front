@@ -1,29 +1,43 @@
 import { Plus } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
-const Card = ({
-  url,
-  img,
-  title,
-  participants,
-  date,
-}: {
-  url: string;
-  img: string[];
+const userId = "bc430308-def0-4203-9971-437fdba5283a";
+
+interface ChatRoom {
+  room_id: string;
   title: string;
-  participants: string[];
-  date: string;
+  status: "ACTIVE" | "INACTIVE";
+  created_at: string;
+  person_names: string[];
+}
+
+const Card = ({
+  room_id,
+  title,
+  status,
+  created_at,
+  person_names,
+}: {
+  room_id: string;
+  title: string;
+  status: string;
+  created_at: string;
+  person_names: string[];
 }) => (
-  <Link to="">
-    {" "}
+  <Link to={`/chat/${room_id}`}>
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
       <div className="w-full h-48 bg-black"></div>
       <div className="p-4">
         <h3 className="text-lg font-medium mb-2">{title}</h3>
         <p className="text-gray-500 text-sm">
-          {participants}
+          {person_names.length > 1
+            ? person_names.slice(0, -1).join(", ") +
+              ", " +
+              person_names.slice(-1)
+            : person_names[0]}
           <div className="flex justify-end">
-            <span>{date}</span>
+            <span>{created_at}</span>
           </div>
         </p>
       </div>
@@ -31,15 +45,26 @@ const Card = ({
   </Link>
 );
 const Dashboard = () => {
-  const Cards = [
-    {
-      url: "",
-      img: [""],
-      title: "오늘 저녁밥 메뉴에 대한 고민상담",
-      author: ["고죠 사토루", "이순신"],
-      duration: "2025-01-11",
-    },
-  ];
+  const [chatRooms, setChatRooms] = useState<ChatRoom[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchChatRooms = async () => {
+      try {
+        const response = await fetch(
+          `${process.env.REACT_APP_API_BASE_URL}/chat-rooms/?user_id=${userId}`
+        );
+        const data = await response.json();
+        setChatRooms(data);
+      } catch (error) {
+        console.error("Error fetching chat rooms:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchChatRooms();
+  }, []);
 
   return (
     <>
@@ -55,11 +80,15 @@ const Dashboard = () => {
           </div>
 
           <div className="flex justify-center items-center mt-8">
-            <div className="w-52 h-52 bg-gray-100 rounded-lg border border-gray-200 flex justify-center items-center mb-10">
+            <div className="relative w-52 h-52 mb-10 group flex items-center justify-center">
+              <div className="absolute inset-0 rounded-lg transition-colors duration-200" />
               <img
-                src=""
+                src="/peep.jpg"
                 alt="profile"
-                className="w-full h-full object-cover rounded-lg"
+                className="w-full h-full object-cover rounded-lg shadow-md ring-2 ring-gray-200/50"
+                onError={(e) => {
+                  e.currentTarget.src = "/default-profile.jpg";
+                }}
               />
             </div>
           </div>
@@ -80,14 +109,14 @@ const Dashboard = () => {
           <h2 className="text-lg mb-8">내 채팅 기록</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Cards.map((chat, index) => (
+            {chatRooms.map((chat, index) => (
               <Card
                 key={index}
-                url={chat.url}
-                img={chat.img}
+                room_id={chat.room_id}
                 title={chat.title}
-                participants={chat.author}
-                date={chat.duration}
+                status={chat.status}
+                created_at={chat.created_at.substring(0, 10)}
+                person_names={chat.person_names}
               />
             ))}
           </div>
