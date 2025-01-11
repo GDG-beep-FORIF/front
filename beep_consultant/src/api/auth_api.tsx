@@ -6,7 +6,6 @@ interface LoginResponse {
 
 interface SignupData {
     name: string;
-    username: string;
     password: string;
     email: string;
 }
@@ -20,9 +19,9 @@ export const signup = async (signupData: SignupData): Promise<void> => {
     }
 };
 
-export const login = async (username: string, password: string): Promise<any> => {
+export const login = async (email: string, password: string): Promise<any> => {
     try {
-      const response = await axiosInstance.post<LoginResponse>('/auth/login', { username, password });
+      const response = await axiosInstance.post<LoginResponse>('/auth/login', { email, password });
       return response;
     } catch (error) {
       console.error('Login failed:', error);

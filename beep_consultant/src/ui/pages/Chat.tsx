@@ -49,6 +49,7 @@ const ChatPage = () => {
     const participantName = newParticipant.trim();
     if (participantName && participants.length < 3) {
       try {
+        console.log(participantName);
         const response = await get_person_info(participantName);
         const personInfo = response.data;
         

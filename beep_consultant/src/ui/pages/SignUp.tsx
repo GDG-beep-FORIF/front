@@ -6,7 +6,6 @@ import { useAuth } from "../../contexts/AuthContext";
 interface SignUpForm {
   name: string;
   email: string;
-  username: string;
   password: string;
   passwordConfirm: string; // 비밀번호 확인 필드 추가
 }
@@ -15,7 +14,6 @@ const SignUpPage: React.FC = () => {
   const navigate = useNavigate();
   const { login: authLogin, user } = useAuth();
   const [formData, setFormData] = useState<SignUpForm>({
-    username: "",
     password: "",
     name: "",
     email: "",
@@ -95,19 +93,6 @@ const SignUpPage: React.FC = () => {
                   name="email"
                   type="email"
                   value={formData.email}
-                  onChange={handleChange}
-                  className="mt-1 block w-full border-0 border-b-2 border-light-green focus:outline-none focus:ring-0 focus:border-dark-green py-3 px-3"
-                />
-              </div>
-              <div>
-                <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                  아이디
-                </label>
-                <input
-                  id="username"
-                  name="username"
-                  type="text"
-                  value={formData.username}
                   onChange={handleChange}
                   className="mt-1 block w-full border-0 border-b-2 border-light-green focus:outline-none focus:ring-0 focus:border-dark-green py-3 px-3"
                 />

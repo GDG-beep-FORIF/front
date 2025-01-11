@@ -2,11 +2,8 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import axiosInstance from '../api/axiosInstance';
 
 interface User {
-    department: string;
     email: string;
-    university: string;
     userID: string;
-    username: string;
 }
   
 interface AuthContextType {

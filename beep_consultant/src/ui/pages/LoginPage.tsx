@@ -46,7 +46,7 @@ const LoginForm: React.FC = () => {
             });
             navigate("/dashboard");
         } catch (error: any) {
-            setError("아이디 또는 비밀번호가 올바르지 않습니다.");
+            setError("이메일 또는 비밀번호가 올바르지 않습니다.");
         }
     };
 
@@ -80,7 +80,7 @@ const LoginForm: React.FC = () => {
                                 <label
                                     htmlFor="id"
                                     className="block text-sm font-medium text-gray-700">
-                                    아이디
+                                    이메일
                                 </label>
                                 <input
                                     id="username"
