@@ -1,43 +1,20 @@
-// import React from 'react';
-// import ReactMarkdown from 'react-markdown';
-
-// interface Props {
-//   summaryContent: string | undefined;
-// }
-
-// const SummaryContent: React.FC<Props> = ({ summaryContent }) => {
-//     if (!summaryContent) {
-//         return null;
-//       }
-
-//     return (
-//         summaryContent && (
-//         <div className="mt-8 prose max-w-none">
-//             <div className="bg-gray-50 p-6 rounded-lg">
-//             <ReactMarkdown>{summaryContent}</ReactMarkdown>
-//             </div>
-//         </div>
-//         )
-//     );
-// };
-
-// export default SummaryContent;
-
-
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 
 interface SummaryContentProps {
     summaryContent: string | undefined;
+    initialQuery?: string;
   }
 
-const SummaryContent: React.FC<SummaryContentProps> = ({ summaryContent }) => {
-  // If no content provided, don't render anything
+const SummaryContent: React.FC<SummaryContentProps> = ({ summaryContent, initialQuery }) => {
   if (!summaryContent) {
     return null;
   }
 
-  // Try to safely render the markdown content
+  const fullContent = initialQuery 
+    ? `### 초기 고민 상담 질문: **${initialQuery}**\n\n${summaryContent}`
+    : summaryContent;
+
   try {
     return (
       <div className="mt-8">
@@ -64,7 +41,7 @@ const SummaryContent: React.FC<SummaryContentProps> = ({ summaryContent }) => {
                 ),
               }}
             >
-              {summaryContent}
+              {fullContent}
             </ReactMarkdown>
           </div>
         </div>

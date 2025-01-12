@@ -22,7 +22,8 @@ export interface Person {
 
 interface SummaryPageProps {
   summary?: string;
-  aiList?: any[]
+  aiList?: any[],
+  initialQuery?: string;
 }
 
 interface Props {
@@ -40,8 +41,8 @@ const SummaryPage: React.FC<SummaryPageProps> = () => {
   const { user } = useAuth();
 
   // Get summary from navigation state
-  const { summary: locationSummary, aiList } = location.state || {};
-  console.log(aiList);
+  const { summary: locationSummary, aiList, initialQuery } = location.state || {};
+  console.log(initialQuery);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -176,14 +177,7 @@ const SummaryPage: React.FC<SummaryPageProps> = () => {
           ))}
         </div>
 
-        {/* {summaryContent && (
-          <div className="mt-8 prose max-w-none">
-            <div className="bg-gray-50 p-6 rounded-lg">
-              {summaryContent}
-            </div>
-          </div>
-        )} */}
-        <SummaryContent summaryContent={summaryContent}/>
+        <SummaryContent summaryContent={summaryContent} initialQuery={initialQuery}/>
 
         <div className="mt-12 space-y-4">
           <button

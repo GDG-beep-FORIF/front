@@ -35,7 +35,7 @@ const ChatPage = () => {
   ]);
   const [newParticipant, setNewParticipant] = useState('');
   const [aiList, setAIList] = useState<any[]>([]);
-  // const [initialQuery, setInitialQuery] = useState('');
+  const [initialQuery, setInitialQuery] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [currentMessage, setCurrentMessage] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -179,9 +179,9 @@ const ChatPage = () => {
       };
       const updatedMessages = [...messages, newMessage];
       setMessages(updatedMessages);
-      // if (initialQuery === '') {
-      //   setInitialQuery(currentMessage);
-      // }
+      if (initialQuery === '') {
+        setInitialQuery(currentMessage);
+      }
       setCurrentMessage('');
 
       try {
@@ -216,53 +216,6 @@ const ChatPage = () => {
     }
   };
 
-  // const renderMessage = (message: ChatMessage) => {
-  //   if (message.isSystem) {
-  //     return (
-  //       <div className="flex justify-center">
-  //         <div className="bg-gray-100 text-gray-600 px-4 py-2 rounded-lg text-sm">
-  //           {message.content}
-  //         </div>
-  //       </div>
-  //     );
-  //   }
-
-  //   const sender = participants.find(p => p.id === message.senderId);
-  //   const isAI = !message.isSystem && sender && !sender.isUser;
-
-  //   if (isAI) {
-  //     return (
-  //       <div className="flex items-start space-x-3">
-  //         <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
-  //           {sender?.image_url ? (
-  //             <img 
-  //               src={sender.image_url} 
-  //               alt={sender.name}
-  //               className="w-full h-full object-cover"
-  //             />
-  //           ) : (
-  //             <div className="w-full h-full bg-gray-200 flex items-center justify-center text-sm">
-  //               {sender?.name.charAt(0)}
-  //             </div>
-  //           )}
-  //         </div>
-  //         <div>
-  //           <div className="text-sm text-gray-600 mb-1">{sender?.name}</div>
-  //           <div className="bg-white px-4 py-2 rounded-lg shadow-sm">
-  //             {message.content}
-  //           </div>
-  //         </div>
-  //       </div>
-  //     );
-  //   }
-  //   return (
-  //     <div className="flex justify-end">
-  //       <div className="bg-green-100 px-4 py-2 rounded-lg max-w-[70%]">
-  //         {message.content}
-  //       </div>
-  //     </div>
-  //   );
-  // };
   const renderMessage = (message: ChatMessage) => {
     if (message.isSystem) {
       // 시스템 메시지 렌더링 (변경 없음)
@@ -441,65 +394,6 @@ const ChatPage = () => {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Message Input */}
-        {/* <div className="bg-white p-4 border-t border-gray-200">
-          <div className="flex items-center space-x-2">
-            <input
-              type="text"
-              value={currentMessage}
-              onChange={(e) => setCurrentMessage(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-              placeholder="메시지를 입력하세요..."
-              className="flex-1 p-2 border border-gray-300 rounded-lg"
-              disabled={(aiParticipants.length === 2 && !isConnected) || !chatRoomID}
-            />
-            <button
-              onClick={handleSendMessage}
-              disabled={(aiParticipants.length === 2 && !isConnected) || !chatRoomID}
-              className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:bg-gray-300"
-            >
-              <Send size={20} />
-            </button>
-          </div>
-        </div>
-      </div>
-    </div> */}
-    {/* <div className="bg-white p-4 border-t border-gray-200">
-          {isChatEnded ? (
-            <div className="flex justify-center">
-              <button
-                onClick={() => navigate(`/summary/${chatRoomID}`, { state: { summary } })}
-                className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 flex items-center space-x-2"
-              >
-                <span>토론 종료. 요약 보러 가기</span>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center space-x-2">
-              <input
-                type="text"
-                value={currentMessage}
-                onChange={(e) => setCurrentMessage(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                placeholder="메시지를 입력하세요..."
-                className="flex-1 p-2 border border-gray-300 rounded-lg"
-                disabled={!isConnected || !chatRoomID}
-              />
-              <button
-                onClick={handleSendMessage}
-                disabled={!isConnected || !chatRoomID}
-                className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:bg-gray-300"
-              >
-                <Send size={20} />
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    </div> */}
     <div className="bg-white p-4 border-t border-gray-200">
           {useWebSocket ? (
             // WebSocket 사용 시 (AI 2명)
@@ -508,7 +402,8 @@ const ChatPage = () => {
                 <button
                   onClick={() => navigate(`/summary/${chatRoomID}`, { state: { 
                     summary,
-                    aiList
+                    aiList,
+                    initialQuery
                   } })}
                   className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 flex items-center space-x-2"
                 >
