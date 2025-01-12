@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { axiosInstance2 } from "../../api/axiosInstance";
+import SummaryContent from "../components/SummaryContent";
 
 export interface DataFrom {
   room_id: string;
@@ -22,6 +23,10 @@ export interface Person {
 interface SummaryPageProps {
   summary?: string;
   aiList?: any[]
+}
+
+interface Props {
+  summaryContent: string | undefined;
 }
 
 const SummaryPage: React.FC<SummaryPageProps> = () => {
@@ -147,7 +152,13 @@ const SummaryPage: React.FC<SummaryPageProps> = () => {
               key={person.id}
               className="p-4 flex space-x-4 border rounded-lg shadow-sm hover:shadow-md transition-shadow"
             >
-              <div className="w-32 h-32 bg-[#EBF2EE] flex items-center justify-center flex-shrink-0 rounded-lg"></div>
+              <div className="w-32 h-32 bg-[#EBF2EE] flex items-center justify-center flex-shrink-0 rounded-lg">
+                <img 
+                  src={person.imageUrl} 
+                  alt="Person Image"
+                  className="w-full h-full object-contain"
+                />
+              </div>
               <div className="flex-grow">
                 <h3 className="font-medium mb-1">{person.name}</h3>
                 {person.era && (
@@ -165,13 +176,14 @@ const SummaryPage: React.FC<SummaryPageProps> = () => {
           ))}
         </div>
 
-        {summaryContent && (
+        {/* {summaryContent && (
           <div className="mt-8 prose max-w-none">
             <div className="bg-gray-50 p-6 rounded-lg">
               {summaryContent}
             </div>
           </div>
-        )}
+        )} */}
+        <SummaryContent summaryContent={summaryContent}/>
 
         <div className="mt-12 space-y-4">
           <button
