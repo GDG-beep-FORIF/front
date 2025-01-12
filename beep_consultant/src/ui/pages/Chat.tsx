@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { get_person_info, create_chat_room, start_chat } from '../../api/chat_api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useChatWebSocket } from './../../api/chat_websocket';
+import { useLocation } from 'react-router-dom';
 
 interface ChatParticipant {
   id: string;
@@ -36,7 +37,24 @@ const ChatPage = () => {
   const [newParticipant, setNewParticipant] = useState('');
   const [aiList, setAIList] = useState<any[]>([]);
   const [initialQuery, setInitialQuery] = useState('');
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  // const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const location = useLocation();
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    // location.state에서 채팅 히스토리가 있다면 변환하여 초기값으로 설정
+    const chatHistory = location.state?.chatHistory;
+    if (chatHistory) {
+      return chatHistory.map((msg: any) => ({
+        id: msg.messageId,
+        sender: msg.senderType === 'USER' ? '나' : msg.sender,
+        senderId: msg.senderId,
+        content: msg.message,
+        timestamp: new Date(msg.timestamp || Date.now()),
+        isAI: msg.senderType === 'AI',
+        isSystem: msg.senderType === 'SYSTEM'
+      }));
+    }
+    return [];
+  });
   const [currentMessage, setCurrentMessage] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [isAddingParticipant, setIsAddingParticipant] = useState(false);
@@ -54,6 +72,8 @@ const ChatPage = () => {
     useWebSocket ? chatRoomID : '',
     userId
   );
+
+  
 
   useEffect(() => {
     if (useWebSocket && wsMessages.length > 0) {

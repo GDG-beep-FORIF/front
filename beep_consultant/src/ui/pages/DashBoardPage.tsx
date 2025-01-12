@@ -3,54 +3,90 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import { axiosInstance, axiosInstance2 } from "../../api/axiosInstance";
 
-const Card = ({
-  room_id,
-  title,
-  status,
-  created_at,
-  person_names,
-}: {
+interface CardProps {
   room_id: string;
   title: string;
   status: string;
   created_at: string;
   person_names: string[];
-}) => (
-  <Link to={`/summary/${room_id}`} state={{ roomId: room_id }}>
-    <div className="group bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden border border-gray-100">
-      <div className="w-full h-36 sm:h-48 bg-[#558F6B] relative overflow-hidden">
-        <div className="absolute inset-0 bg-black opacity-10 group-hover:opacity-0 transition-opacity duration-200" />
-      </div>
-      <div className="p-4 sm:p-5">
-        <h3 className="text-base sm:text-lg font-semibold mb-2 text-gray-800 group-hover:text-[#558F6B] transition-colors duration-200">
-          {title}
-        </h3>
-        <div className="flex flex-col space-y-2">
-          <p className="text-gray-600 text-xs sm:text-sm line-clamp-1">
-            {person_names.length > 1
-              ? person_names.slice(0, -1).join(", ") +
-                ", " +
-                person_names.slice(-1)
-              : person_names[0]}
-          </p>
-          <div className="flex justify-between items-center">
-            <span className="text-xs text-gray-500">{created_at}</span>
-            <span
-              className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
-                status === "ACTIVE"
-                  ? "bg-[#EBF2EE] text-[#558F6B]"
-                  : "bg-gray-100 text-gray-600"
-              }`}
-            >
-              {status === "ACTIVE" ? "진행중" : "종료"}
-            </span>
+}
+
+const Card = ({ room_id, title, status, created_at, person_names }: CardProps) => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  
+  const handleCardClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    try {
+      // Get summary from API
+      const summaryResponse = await axiosInstance.get(
+        `/chat-rooms/${room_id}`
+      );
+      console.log(summaryResponse);
+      
+      // Get person info
+      // const detailResponse = await axiosInstance2.get(
+      //   `/chat-rooms/${room_id}?user_id=${user?.userId}`
+      // );
+
+      // Navigate to summary page with all required data
+      navigate(`/summary/${room_id}`, {
+        state: {
+          summary: summaryResponse.data.summary,
+          chatMessages: summaryResponse.data.chatMessage, // 채팅 히스토리 추가
+          // aiList: detailResponse.data.persons.map((person: any) => ({
+          //   id: person.person_id,
+          //   name: person.name,
+          //   era: person.era,
+          //   description: person.description,
+          //   imageUrl: person.image_url
+          // }))
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching summary:', error);
+      // Even if summary fetch fails, navigate to the page
+      navigate(`/summary/${room_id}`);
+    }
+  };
+
+  return (
+    <div onClick={handleCardClick} className="cursor-pointer">
+      <div className="group bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden border border-gray-100">
+        <div className="w-full h-36 sm:h-48 bg-[#558F6B] relative overflow-hidden">
+          <div className="absolute inset-0 bg-black opacity-10 group-hover:opacity-0 transition-opacity duration-200" />
+        </div>
+        <div className="p-4 sm:p-5">
+          <h3 className="text-base sm:text-lg font-semibold mb-2 text-gray-800 group-hover:text-[#558F6B] transition-colors duration-200">
+            {title}
+          </h3>
+          <div className="flex flex-col space-y-2">
+            <p className="text-gray-600 text-xs sm:text-sm line-clamp-1">
+              {person_names.length > 1
+                ? person_names.slice(0, -1).join(", ") + ", " + person_names.slice(-1)
+                : person_names[0]}
+            </p>
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-gray-500">{created_at}</span>
+              <span
+                className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
+                  status === "ACTIVE"
+                    ? "bg-[#EBF2EE] text-[#558F6B]"
+                    : "bg-gray-100 text-gray-600"
+                }`}
+              >
+                {status === "ACTIVE" ? "진행중" : "종료"}
+              </span>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </Link>
-);
+  );
+};
+
 
 const Dashboard = () => {
   const [chatRooms, setChatRooms] = useState<any[]>([]);

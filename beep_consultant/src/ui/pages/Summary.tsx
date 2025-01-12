@@ -42,7 +42,6 @@ const SummaryPage: React.FC<SummaryPageProps> = () => {
 
   // Get summary from navigation state
   const { summary: locationSummary, aiList, initialQuery } = location.state || {};
-  console.log(initialQuery);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -148,33 +147,53 @@ const SummaryPage: React.FC<SummaryPageProps> = () => {
         </p>
 
         <div className="space-y-6 mb-12">
-          {aiList.map((person: any) => (
-            <div
-              key={person.id}
-              className="p-4 flex space-x-4 border rounded-lg shadow-sm hover:shadow-md transition-shadow"
-            >
-              <div className="w-32 h-32 bg-[#EBF2EE] flex items-center justify-center flex-shrink-0 rounded-lg">
-                <img 
-                  src={person.imageUrl} 
-                  alt="Person Image"
-                  className="w-full h-full object-contain"
-                />
+          {aiList && aiList.length > 0 ? (
+            aiList.map((person: any) => (
+              <div
+                key={person.id}
+                className="p-4 flex space-x-4 border rounded-lg shadow-sm hover:shadow-md transition-shadow"
+              >
+                <div className="w-32 h-32 bg-[#EBF2EE] flex items-center justify-center flex-shrink-0 rounded-lg">
+                  {person.imageUrl && (<img 
+                    src={person.imageUrl} 
+                    alt={`${person.name} Image`}
+                    className="w-full h-full object-contain"
+                  />)}
+                </div>
+                <div className="flex-grow">
+                  <h3 className="font-medium mb-1">{person.name}</h3>
+                  {person.era && (
+                    <p className="text-gray-600 mb-1">{person.era}</p>
+                  )}
+                  {person.achievements && person.achievements.length > 0 && (
+                    <div className="mt-2">
+                      {person.achievements.slice(0, 3).map((item: any) => (
+                        <p key={item.id} className="text-gray-700">{item.achievementName}</p>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="flex-grow">
-                <h3 className="font-medium mb-1">{person.name}</h3>
-                {person.era && (
-                  <p className="text-gray-600 mb-1">{person.era}</p>
-                )}
-                {person.achievements && person.achievements.length > 0 && (
-                  <div className="mt-2">
-                    {person.achievements.slice(0, 3).map((item: any) => (
-                      <p key={item.id} className="text-gray-700">{item.achievementName}</p>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
+            ))
+          ) : detailData?.persons ? (
+            // detailData.persons.map((person: Person) => (
+            //   <div
+            //     key={person.person_id}
+            //     className="p-4 flex space-x-4 border rounded-lg shadow-sm hover:shadow-md transition-shadow"
+            //   >
+            //     <div className="flex-grow">
+            //       <h3 className="font-medium mb-1">{person.name}</h3>
+            //       {person.era && (
+            //         <p className="text-gray-600 mb-1">{person.era}</p>
+            //       )}
+            //       {person.description && (
+            //         <p className="text-gray-700">{person.description}</p>
+            //       )}
+            //     </div>
+            //   </div>
+            // ))
+            <></>
+          ) : null}
         </div>
 
         <SummaryContent summaryContent={summaryContent} initialQuery={initialQuery}/>
@@ -186,12 +205,17 @@ const SummaryPage: React.FC<SummaryPageProps> = () => {
           >
             대시보드로 돌아가기
           </button>
-          <button
-            onClick={() => navigate("/chat")}
-            className="w-full bg-yellow-50 text-black py-3 rounded-md hover:bg-yellow-100 transition-colors"
-          >
-            채팅보러가기
-          </button>
+          {/* <button
+          onClick={() => navigate("/chat", { 
+            state: { 
+              chatHistory: location.state?.chatMessages,
+              roomId: roomId
+            }
+          })}
+          className="w-full bg-yellow-50 text-black py-3 rounded-md hover:bg-yellow-100 transition-colors"
+        >
+          채팅보러가기
+        </button> */}
         </div>
       </div>
     </div>
